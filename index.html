@@ -1,0 +1,76 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>302细胞房预约</title>
+<style>
+body{font-family:Arial;background:#f5f6f8;padding:15px}
+.card{background:white;border-radius:15px;padding:15px;margin:10px 0}
+input,select,button{width:100%;padding:12px;margin:6px 0;border-radius:8px;border:1px solid #ddd}
+button{background:#2868d8;color:white;border:0}
+.item{padding:10px;border-bottom:1px solid #eee}
+</style>
+</head>
+<body>
+
+<h2>302细胞房预约</h2>
+
+<div class="card">
+<h3>预约</h3>
+<input id="user" placeholder="姓名">
+<select id="resource"></select>
+<input id="cell" placeholder="细胞名称">
+<input id="purpose" placeholder="实验内容">
+<input id="start" type="datetime-local">
+<input id="end" type="datetime-local">
+<button onclick="book()">提交预约</button>
+</div>
+
+<div class="card">
+<h3>当前预约</h3>
+<div id="list"></div>
+</div>
+
+<script>
+async function load(){
+ let rs=await fetch('/api/resources').then(r=>r.json());
+ resource.innerHTML=rs.map(x=>`<option>${x.name}</option>`).join("");
+
+ let bs=await fetch('/api/bookings').then(r=>r.json());
+ list.innerHTML=bs.map(x=>
+ `<div class=item>
+ ${x.resource}<br>
+ ${x.user} | ${x.cell}<br>
+ ${x.start} - ${x.end}
+ </div>`).join("");
+}
+
+async function book(){
+ let d={
+ user:user.value,
+ resource:resource.value,
+ cell:cell.value,
+ purpose:purpose.value,
+ start:start.value,
+ end:end.value
+ };
+ let r=await fetch('/api/book',{
+ method:'POST',
+ headers:{'Content-Type':'application/json'},
+ body:JSON.stringify(d)
+ });
+ if(r.ok){
+ alert("预约成功");
+ load();
+ }else{
+ alert("时间冲突，该设备已被预约");
+ }
+}
+load();
+setInterval(load,5000);
+</script>
+
+</body>
+</html>
